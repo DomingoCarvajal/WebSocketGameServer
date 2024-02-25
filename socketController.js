@@ -53,9 +53,11 @@ function initializeSocket(server) {
         const roomMembers = rooms[roomId];
         const userIndex = roomMembers.indexOf(socket.id);
         const sender = userIndex === 0 ? 'Player 1' : 'Player 2';
+        const turn = roomMembers[userIndex === 0 ? 1 : 0];
 
-        sendMessageToRoom(io, roomId, 'message', { sender, content: message.content });
+        sendMessageToRoom(io, roomId, 'message', { sender, content: message.content, turn });
     });
+
 
     socket.on('disconnect', () => {
       console.log('Client disconnected');
