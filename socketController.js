@@ -1,4 +1,6 @@
 const { Server } = require('socket.io');
+const { createRoom } = require('./room');
+const { handlePlay } = require('./gameLogic');
 
 const rooms = {};
 
@@ -8,7 +10,7 @@ function generateRoomId() {
 
 function findAvailableRoom() {
   for (const roomId in rooms) {
-    if (rooms[roomId].length < 2) {
+    if (rooms[roomId]['players'].length < 2) {
       return roomId;
     }
   }
@@ -18,7 +20,7 @@ function findAvailableRoom() {
 function initializeSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin: 'http://localhost:3000',
+      origin: ['http://localhost:3000', 'http://192.168.1.183:3000'],
       methods: ['GET', 'POST'],
     },
   });
@@ -31,40 +33,50 @@ function initializeSocket(server) {
       socket.join(availableRoomId);
 
       if (!rooms[availableRoomId]) {
-        rooms[availableRoomId] = [socket.id];
-      } else {
-        rooms[availableRoomId].push(socket.id);
+        rooms[availableRoomId] = createRoom(availableRoomId);
       }
+      rooms[availableRoomId]['players'].push(socket.id);
 
-      const roomSize = rooms[availableRoomId].length;
+      const roomSize = rooms[availableRoomId]['players'].length;
       if (roomSize === 2) {
         io.to(availableRoomId).emit('gameStarted', {
           roomId: availableRoomId,
-          players: rooms[availableRoomId],
-          turn: rooms[availableRoomId][0],
+          players: rooms[availableRoomId]['players'],
+          turn: rooms[availableRoomId]['players'][0],
+          startingPlayer: rooms[availableRoomId]['currentFootballer'].playerName
         });
+      }
+    });
+
+    socket.on('cancelGame', () => {
+
+      for (const roomId in rooms) {
+        const index = rooms[roomId]['players'].indexOf(socket.id);
+        if (index !== -1) {
+          rooms[roomId]['players'].splice(index, 1);
+          if (rooms[roomId]['players'].length === 0) {
+            delete rooms[roomId];
+          }
+          break;
+        }
       }
     });
 
     // Handling messages when the game has started
     socket.on('sendMessage', (message) => {
-        console.log('Message received:', message);
-        const roomId = message.roomId;
-        const roomMembers = rooms[roomId];
-        const userIndex = roomMembers.indexOf(socket.id);
-        const sender = userIndex === 0 ? 'Player 1' : 'Player 2';
-
-        sendMessageToRoom(io, roomId, 'message', { sender, content: message.content });
+      console.log('Message received:', message);
+      const room = rooms[message.roomId];
+      handlePlay(io, socket.id, message.content, room);
     });
 
     socket.on('disconnect', () => {
       console.log('Client disconnected');
 
       for (const roomId in rooms) {
-        const index = rooms[roomId].indexOf(socket.id);
+        const index = rooms[roomId]['players'].indexOf(socket.id);
         if (index !== -1) {
-          rooms[roomId].splice(index, 1);
-          if (rooms[roomId].length === 0) {
+          rooms[roomId]['players'].splice(index, 1);
+          if (rooms[roomId]['players'].length === 0) {
             delete rooms[roomId];
           }
           break;
@@ -76,11 +88,6 @@ function initializeSocket(server) {
   return io;
 }
 
-function sendMessageToRoom(io, roomId, event, data) {
-  io.to(roomId).emit(event, data);
-}
-
 module.exports = {
   initializeSocket,
-  sendMessageToRoom,
 };
