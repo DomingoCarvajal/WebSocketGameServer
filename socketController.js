@@ -20,7 +20,7 @@ function findAvailableRoom() {
 function initializeSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin: 'http://localhost:3000',
+      origin: ['http://localhost:3000', 'http://192.168.1.183:3000'],
       methods: ['GET', 'POST'],
     },
   });
@@ -43,7 +43,22 @@ function initializeSocket(server) {
           roomId: availableRoomId,
           players: rooms[availableRoomId]['players'],
           turn: rooms[availableRoomId]['players'][0],
+          startingPlayer: rooms[availableRoomId]['currentFootballer'].playerName
         });
+      }
+    });
+
+    socket.on('cancelGame', () => {
+
+      for (const roomId in rooms) {
+        const index = rooms[roomId]['players'].indexOf(socket.id);
+        if (index !== -1) {
+          rooms[roomId]['players'].splice(index, 1);
+          if (rooms[roomId]['players'].length === 0) {
+            delete rooms[roomId];
+          }
+          break;
+        }
       }
     });
 

@@ -1,23 +1,24 @@
 const { getNextTurn }  = require('./room');
 const { getTeammateStatus } = require('./apiQueries');
   
-async function handlePlay(io, socketId, playerName, room) {
+async function handlePlay(io, socketId, player, room) {
   try {
     
+    const playerID = player.id;
+    const playerName = player.playerName;
     const currentFootballer = room['currentFootballer'];
     const teamsUsed = room['teamCounter'];
 
-    if (room['footballersUsed'].includes(playerName)) {
+    if (room['footballersUsed'].includes(player)) {
       const errorMessage = `${playerName} has already been used.`;
       return sendInvalidPlayerMesssage(io, room.id, playerName, socketId, errorMessage);
     }
-
     // Check if players were teammates
-    const { wereTheyTeammates, teams } = await getTeammateStatus(playerName, currentFootballer);
+    const { wereTheyTeammates, teams } = await getTeammateStatus(playerID, currentFootballer.id);
 
     if (!wereTheyTeammates) {
         return sendInvalidPlayerMesssage(io, room.id, playerName, socketId,
-            `${playerName} and ${currentFootballer} are not teammates.`);
+            `${playerName} and ${currentFootballer.playerName} are not teammates.`);
     }
 
     const teamsData = {};
@@ -35,7 +36,8 @@ async function handlePlay(io, socketId, playerName, room) {
       teamsData[element] = teamsUsed[element];
     }
 
-    room['currentFootballer'] = playerName;
+    room['currentFootballer'] = player;
+    room['footballersUsed'].push(player);
     const turn = getNextTurn(room, socketId);
     const validPlayerMessageData = getValidPlayerMessageData(playerName, turn, teamsData);
     sendMessageToRoom(io, room.id, 'message', validPlayerMessageData);

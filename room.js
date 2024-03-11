@@ -1,5 +1,5 @@
 function createRoom(id) {
-    const currentFootballer = 'Kyle Walker';
+    const currentFootballer = {id : 5044, playerName: 'Kyle Walker'};
     let timer;
     return { 
         id,
