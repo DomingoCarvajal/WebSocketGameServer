@@ -20,7 +20,9 @@ function findAvailableRoom() {
 function initializeSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin: ['http://localhost:3000', 'http://192.168.1.183:3000'],
+      // origin: ['http://localhost:3000', 'http://10.200.149.255:3000'],
+      // I want to allow connections from any origin
+      origin: '*',
       methods: ['GET', 'POST'],
     },
   });

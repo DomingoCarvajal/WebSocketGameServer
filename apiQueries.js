@@ -1,6 +1,9 @@
+const dotenv = require('dotenv');
+dotenv.config();
+const URL = process.env.PRODUCTION_URL;
 async function getTeammateStatus(playerID1, playerID2) {
     try {
-        const response = await fetch('http://localhost:8000/teammates', {
+        const response = await fetch(URL + '/teammates', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -15,14 +18,14 @@ async function getTeammateStatus(playerID1, playerID2) {
     }
 }
 
-async function getInternationalTeammateStatus(player1, player2) {
+async function getInternationalTeammateStatus(playerID1, playerID2) {
     try {
-        const response = await fetch('http://localhost:8000/international-teammates', {
+        const response = await fetch(URL + '/international-teammates', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ player1, player2 })
+        body: JSON.stringify({ playerID1, playerID2 })
         });
         const data = await response.json();
         return data;

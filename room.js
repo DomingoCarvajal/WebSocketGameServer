@@ -6,7 +6,7 @@ function createRoom(id) {
         players: [],
         teamCounter: {},
         currentFootballer,
-        footballersUsed: [currentFootballer],
+        footballersUsed: [currentFootballer.id],
         timer,
     };
 }

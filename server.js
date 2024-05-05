@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://192.168.1.183:3000'],
+  origin: ['http://localhost:3000', 'http://192.168.1.183:3000', 'http://10.200.209.51:3000'],
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
 }));
